@@ -9,14 +9,16 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@capacitor/core": "^8.4.1",
     "@huggingface/inference": "^4.13.23",
     "@tailwindcss/typography": "^0.5.20",
-    "next": "16.2.10",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "next": "^16.2.10",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "react-markdown": "^10.1.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.4.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
