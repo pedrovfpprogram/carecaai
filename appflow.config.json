@@ -1,0 +1,9 @@
+{
+  "apps": [
+    {
+      "appId": "09c39dce",
+      "root": "tutor-ia",
+      "dependencyInstallCommand": "npm install --legacy-peer-deps"
+    }
+  ]
+}
