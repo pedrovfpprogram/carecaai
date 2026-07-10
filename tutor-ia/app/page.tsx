@@ -3,23 +3,32 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 
+// 1. Tipagem: Ensinando ao TypeScript o formato da nossa mensagem
+interface Mensagem {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export default function Home() {
-  const [mensagens, setMensagens] = useState([]);
+  // 2. Tipagem: Avisando que o array é de "Mensagens"
+  const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [input, setInput] = useState("");
   const [linguagem, setLinguagem] = useState("Python");
   const [carregando, setCarregando] = useState(false);
   
-  const fimDoChatRef = useRef(null);
+  // 3. Tipagem: Avisando que a referência vai apontar para uma <div>
+  const fimDoChatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fimDoChatRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensagens]);
 
-  const enviarMensagem = async (e) => {
+  // 4. Tipagem: Avisando que o evento 'e' vem de um formulário HTML
+  const enviarMensagem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || carregando) return;
 
-    const novaMensagemUsuario = { role: "user", content: input };
+    const novaMensagemUsuario: Mensagem = { role: "user", content: input };
     setMensagens((prev) => [...prev, novaMensagemUsuario]);
     setInput("");
     setCarregando(true);
@@ -37,6 +46,7 @@ export default function Home() {
       });
 
       if (!response.ok) throw new Error("Erro ao conectar com a API");
+      if (!response.body) throw new Error("Sem corpo de resposta");
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -67,7 +77,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-[100dvh] bg-gray-950 text-gray-100 font-sans">
-      {/* Cabeçalho Responsivo */}
       <header className="flex flex-col md:flex-row items-center justify-between p-4 bg-gray-900 border-b border-gray-800 shadow-md gap-4 md:gap-0">
         <h1 className="text-2xl font-black bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent tracking-tight">
           👨‍🦲 CarecaAI
@@ -88,11 +97,9 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Área do Chat */}
       <main className="flex-1 p-4 overflow-y-auto w-full max-w-4xl mx-auto space-y-6">
         {mensagens.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400 text-center px-4">
-            {/* O Careca na tela inicial */}
             <span className="text-8xl mb-6">👨‍🦲</span>
             <h2 className="text-3xl font-bold text-gray-200">Qual é o serviço de hoje?</h2>
             <p className="text-sm mt-4 text-gray-500">Manda a bronca que eu resolvo o código pra você.</p>
@@ -100,13 +107,11 @@ export default function Home() {
         ) : (
           mensagens.map((msg, index) => (
             <div key={index} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              {/* O min-w-0 garante que o Flexbox não quebre e a caixa fique dentro da tela */}
               <div className={`max-w-[95%] md:max-w-[85%] min-w-0 rounded-2xl p-4 shadow-sm ${msg.role === "user" ? "bg-orange-600 text-white rounded-tr-none" : "bg-gray-800 text-gray-200 border border-gray-700 rounded-tl-none"}`}>
                 
                 {msg.role === "user" ? (
                   <div className="break-words whitespace-pre-wrap">{msg.content}</div>
                 ) : (
-                  /* O overflow-x-auto cria a barra de rolagem apenas no código longo */
                   <div className="prose prose-invert max-w-none overflow-x-auto break-words w-full">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
@@ -119,7 +124,6 @@ export default function Home() {
         <div ref={fimDoChatRef} />
       </main>
 
-      {/* Área de Input */}
       <footer className="p-3 md:p-4 bg-gray-900 border-t border-gray-800 pb-safe">
         <form onSubmit={enviarMensagem} className="max-w-4xl mx-auto relative flex items-center">
           <input
