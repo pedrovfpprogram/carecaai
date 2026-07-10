@@ -1,0 +1,16 @@
+{
+  "name": "CarecaAI",
+  "short_name": "CarecaAI",
+  "description": "Seu tutor de programação de bolso",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#ea580c",
+  "icons": [
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/React-icon.svg/512px-React-icon.svg.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
