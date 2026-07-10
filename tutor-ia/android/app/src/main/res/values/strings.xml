@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CarecaAI</string>
+    <string name="title_activity_main">CarecaAI</string>
+    <string name="package_name">com.pedro.carecaai</string>
+    <string name="custom_url_scheme">com.pedro.carecaai</string>
+</resources>

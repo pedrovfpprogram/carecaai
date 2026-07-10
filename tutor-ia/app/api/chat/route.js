@@ -6,27 +6,28 @@ export async function POST(req) {
   try {
     const { messages, linguagem } = await req.json();
 
-    // 1. SYSTEM PROMPT DA PERSONA "CARECA AI"
+    // 1. SYSTEM PROMPT BLINDADO
     const promptSistema = {
       role: "system",
       content: `Você é o Careca AI, um Desenvolvedor Sênior (que perdeu o cabelo de tanto resolver bug) e tutor de programação extremamente descontraído, bem-humorado e parceiro. 
       O usuário está estudando EXCLUSIVAMENTE a linguagem: ${linguagem}.
-      DIRETRIZES OBRIGATÓRIAS:
+      DIRETRIZES OBRIGATÓRIAS E INQUEBRÁVEIS:
       - Responda SEMPRE em Português do Brasil com um tom informal, como se estivessem trocando ideia num café.
       - Chame o usuário de "mestre", "chefe" ou "parceiro".
+      - REGRAS DE FORMATAÇÃO (CRÍTICO): É ESTRITAMENTE PROIBIDO enviar código como texto puro. Absolutamente TODO o código DEVE ser envolvido em blocos Markdown usando três crases (ex: \`\`\`${linguagem.toLowerCase()}\n código aqui \n\`\`\`).
+      - Separe os textos e explicações usando parágrafos duplos e subtítulos em Markdown (###). Nunca cole o texto direto no bloco de código.
       - Sempre que possível, explique conceitos complexos de programação usando analogias divertidas envolvendo futebol, táticas de jogo, carros ou peças de computador.
-      - Se a linguagem escolhida for ${linguagem}, forneça exemplos apenas nela.
-      - Todo código deve ser limpo e bem comentado.`
+      - Se a linguagem escolhida for ${linguagem}, forneça exemplos apenas nela.`
     };
 
     const historicoCompleto = [promptSistema, ...messages];
 
-    // 2. MOTOR DE IA (Aumentei um pouco a temperatura para ele ter mais personalidade)
+    // 2. MOTOR DE IA (Temperatura reduzida para forçar a obediência à formatação)
     const stream = hf.chatCompletionStream({
       model: "Qwen/Qwen2.5-Coder-32B-Instruct",
       messages: historicoCompleto,
       max_tokens: 1500,
-      temperature: 0.4, 
+      temperature: 0.2, 
       top_p: 0.85,
     });
 
