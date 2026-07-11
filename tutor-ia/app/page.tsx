@@ -2,28 +2,27 @@
 
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+// O tema vscDarkPlus é o que mais se aproxima dessa vibe escura e elegante da sua imagem
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
-// 1. Tipagem: Ensinando ao TypeScript o formato da nossa mensagem
 interface Mensagem {
   role: "user" | "assistant";
   content: string;
 }
 
 export default function Home() {
-  // 2. Tipagem: Avisando que o array é de "Mensagens"
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [input, setInput] = useState("");
   const [linguagem, setLinguagem] = useState("Python");
   const [carregando, setCarregando] = useState(false);
   
-  // 3. Tipagem: Avisando que a referência vai apontar para uma <div>
   const fimDoChatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fimDoChatRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensagens]);
 
-  // 4. Tipagem: Avisando que o evento 'e' vem de um formulário HTML
   const enviarMensagem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || carregando) return;
@@ -113,7 +112,49 @@ export default function Home() {
                   <div className="break-words whitespace-pre-wrap">{msg.content}</div>
                 ) : (
                   <div className="prose prose-invert max-w-none overflow-x-auto break-words w-full">
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    <ReactMarkdown
+                      components={{
+                        // Interceptador de blocos de código
+                        code({ className, children, ...props }: any) {
+                          const match = /language-(\w+)/.exec(className || "");
+                          // Se for um bloco de código grande (com linguagem definida)
+                          if (match) {
+                            return (
+                              <div className="rounded-lg overflow-hidden border border-gray-700 my-4 bg-[#1e1e1e] shadow-lg">
+                                {/* Cabeçalho do código (Barra estilo Claude) */}
+                                <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-700">
+                                  <span className="text-xs font-mono text-gray-400 lowercase">{match[1]}</span>
+                                  <button
+                                    onClick={() => navigator.clipboard.writeText(String(children))}
+                                    className="text-xs font-medium text-gray-400 hover:text-white transition-colors"
+                                  >
+                                    Copiar
+                                  </button>
+                                </div>
+                                {/* O Pintor de Sintaxe */}
+                                <SyntaxHighlighter
+                                  {...props}
+                                  style={vscDarkPlus}
+                                  language={match[1]}
+                                  PreTag="div"
+                                  customStyle={{ margin: 0, padding: "1rem", background: "transparent", fontSize: "0.875rem" }}
+                                >
+                                  {String(children).replace(/\n$/, "")}
+                                </SyntaxHighlighter>
+                              </div>
+                            );
+                          }
+                          // Se for apenas uma palavrinha com crase no meio do texto (inline code)
+                          return (
+                            <code {...props} className="bg-gray-900 text-orange-400 px-1.5 py-0.5 rounded-md text-sm font-mono border border-gray-700">
+                              {children}
+                            </code>
+                          );
+                        },
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
                   </div>
                 )}
 
