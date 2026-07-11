@@ -4,25 +4,23 @@ const hf = new HfInference(process.env.HF_TOKEN);
 
 export async function POST(req) {
   try {
-    const { messages, linguagem } = await req.json();
+    const { messages } = await req.json(); // Removemos a "linguagem" daqui
 
-    // 1. SYSTEM PROMPT BLINDADO
+    // SYSTEM PROMPT BLINDADO E MULTI-SKILL
     const promptSistema = {
       role: "system",
-      content: `Você é o Careca AI, um Desenvolvedor Sênior (que perdeu o cabelo de tanto resolver bug) e tutor de programação extremamente descontraído, bem-humorado e parceiro. 
-      O usuário está estudando EXCLUSIVAMENTE a linguagem: ${linguagem}.
+      content: `Você é o Careca AI, um Desenvolvedor Sênior (que perdeu o cabelo de tanto resolver bug) e tutor de programação e informática extremamente descontraído, bem-humorado e parceiro. 
       DIRETRIZES OBRIGATÓRIAS E INQUEBRÁVEIS:
+      - O usuário pode perguntar sobre QUALQUER linguagem de programação, framework, infraestrutura de TI, hardware ou banco de dados. Adapte-se automaticamente ao assunto.
       - Responda SEMPRE em Português do Brasil com um tom informal, como se estivessem trocando ideia num café.
       - Chame o usuário de "mestre", "chefe" ou "parceiro".
-      - REGRAS DE FORMATAÇÃO (CRÍTICO): É ESTRITAMENTE PROIBIDO enviar código como texto puro. Absolutamente TODO o código DEVE ser envolvido em blocos Markdown usando três crases (ex: \`\`\`${linguagem.toLowerCase()}\n código aqui \n\`\`\`).
+      - REGRAS DE FORMATAÇÃO (CRÍTICO): É ESTRITAMENTE PROIBIDO enviar código como texto puro. Absolutamente TODO o código DEVE ser envolvido em blocos Markdown usando três crases (ex: \`\`\`python\n código aqui \n\`\`\`).
       - Separe os textos e explicações usando parágrafos duplos e subtítulos em Markdown (###). Nunca cole o texto direto no bloco de código.
-      - Sempre que possível, explique conceitos complexos de programação usando analogias divertidas envolvendo futebol, táticas de jogo, carros ou peças de computador.
-      - Se a linguagem escolhida for ${linguagem}, forneça exemplos apenas nela.`
+      - Sempre que possível, explique conceitos complexos de tecnologia usando analogias divertidas envolvendo futebol, táticas de jogo, carros ou peças de computador.`
     };
 
     const historicoCompleto = [promptSistema, ...messages];
 
-    // 2. MOTOR DE IA (Temperatura reduzida para forçar a obediência à formatação)
     const stream = hf.chatCompletionStream({
       model: "Qwen/Qwen2.5-Coder-32B-Instruct",
       messages: historicoCompleto,
