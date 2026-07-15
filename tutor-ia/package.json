@@ -12,6 +12,7 @@
     "@capacitor/android": "^8.4.1",
     "@capacitor/core": "^8.4.1",
     "@capacitor/haptics": "^8.0.2",
+    "@capacitor/share": "^8.0.1",
     "@huggingface/inference": "^4.13.23",
     "@tailwindcss/typography": "^0.5.20",
     "next": "^16.2.10",

@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
+import { Share } from "@capacitor/share"; // NOVO: Plugin de Partilha
 
 interface Mensagem {
   role: "user" | "assistant";
@@ -38,7 +39,27 @@ export default function Home() {
 
   const [xp, setXp] = useState<number>(0);
 
+  // NOVO: Estado de Conexão à Internet
+  const [isOnline, setIsOnline] = useState(true);
+
   const fimDoChatRef = useRef<HTMLDivElement>(null);
+
+  // Monitorizador de Rede
+  useEffect(() => {
+    // Define o estado inicial baseado no navegador
+    setIsOnline(navigator.onLine);
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const savedSessions = localStorage.getItem("carecaai_sessions");
@@ -77,7 +98,12 @@ export default function Home() {
     fimDoChatRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [sessions]);
 
-  // A TUA EVOLUÇÃO (Títulos baseados na pontuação)
+  useEffect(() => {
+    const handleClickFora = () => setChatMenuAberto(null);
+    document.addEventListener("click", handleClickFora);
+    return () => document.removeEventListener("click", handleClickFora);
+  }, []);
+
   const calcularNivel = (pontos: number) => {
     if (pontos < 100) return { nivel: 1, titulo: "Estagiário Perdido", progresso: (pontos / 100) * 100, max: 100 };
     if (pontos < 300) return { nivel: 2, titulo: "Dev Júnior Traumatizado", progresso: ((pontos - 100) / 200) * 100, max: 300 };
@@ -181,7 +207,7 @@ export default function Home() {
 
   const enviarMensagem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || carregando) return;
+    if (!input.trim() || carregando || !isOnline) return;
 
     try { await Haptics.impact({ style: ImpactStyle.Medium }); } catch (e) {}
 
@@ -214,7 +240,7 @@ export default function Home() {
   };
 
   const iniciarDesafioArena = async () => {
-    if (!temaArena.trim() || carregando) return;
+    if (!temaArena.trim() || carregando || !isOnline) return;
     try { await Haptics.notification({ type: NotificationType.Warning }); } catch (e) {}
 
     setModalArenaAberto(false);
@@ -223,7 +249,6 @@ export default function Home() {
     const novoId = crypto.randomUUID();
     
     const msgUI: Mensagem = { role: "user", content: `⚔️ **Desafio da Arena Iniciado!**\n\nTema escolhido: **${temaArena}**.\nMande o código quebrado, chefe!` };
-    
     const msgAPI: Mensagem = { 
       role: "user", 
       content: `Aja como um Tech Lead carrasco. Inicie um desafio da ARENA DE BUGS sobre: ${temaArena}. 
@@ -271,8 +296,9 @@ export default function Home() {
               value={temaArena} 
               onChange={(e) => setTemaArena(e.target.value)} 
               onKeyDown={(e) => e.key === 'Enter' && iniciarDesafioArena()}
-              placeholder="Ex: React, Python, SQL, C++..." 
-              className="w-full bg-gray-950 border border-gray-700 p-4 rounded-xl mb-6 text-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all" 
+              disabled={!isOnline}
+              placeholder={isOnline ? "Ex: React, Python, SQL, C++..." : "Necessita de internet para a Arena..."} 
+              className={`w-full border p-4 rounded-xl mb-6 text-white outline-none transition-all ${isOnline ? "bg-gray-950 border-gray-700 focus:border-red-500 focus:ring-1 focus:ring-red-500" : "bg-red-950/20 border-red-900 text-red-500 opacity-70"}`} 
             />
             <div className="flex gap-3 justify-end">
               <button onClick={() => setModalArenaAberto(false)} className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
@@ -280,7 +306,7 @@ export default function Home() {
               </button>
               <button 
                 onClick={iniciarDesafioArena} 
-                disabled={!temaArena.trim() || carregando}
+                disabled={!temaArena.trim() || carregando || !isOnline}
                 className="px-5 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-900/30 transition-all"
               >
                 Começar Desafio
@@ -292,7 +318,11 @@ export default function Home() {
 
       <aside className={`absolute md:relative z-40 h-full bg-gray-900 border-r border-gray-800 w-72 flex flex-col transition-transform duration-300 ${menuAberto ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
         
-        <div className="p-4 bg-gray-950/50 border-b border-gray-800">
+        <div className="p-4 bg-gray-950/50 border-b border-gray-800 relative overflow-hidden">
+          {/* Indicador Visual Offline na Sidebar */}
+          {!isOnline && (
+             <div className="absolute top-0 left-0 w-full h-1 bg-red-600 animate-pulse" title="Modo Offline"></div>
+          )}
           <div className="flex justify-between items-end mb-1">
             <span className="text-xs font-bold text-orange-400 uppercase tracking-wider">Nv. {statusAtual.nivel}</span>
             <span className="text-xs text-gray-400">{xp} / {statusAtual.max} XP</span>
@@ -359,7 +389,6 @@ export default function Home() {
                       ⋮
                     </button>
 
-                    {/* O ESCUDO INVISÍVEL - Cobre o ecrã inteiro para captar o clique de fechar */}
                     {chatMenuAberto === sessao.id && (
                       <>
                         <div 
@@ -389,7 +418,7 @@ export default function Home() {
       </aside>
 
       <div className="flex-1 flex flex-col w-full min-w-0 relative">
-        <header className="flex items-center justify-between p-4 bg-gray-900 border-b border-gray-800 shadow-sm">
+        <header className="flex items-center justify-between p-4 bg-gray-900 border-b border-gray-800 shadow-sm relative">
           <div className="flex items-center gap-3">
             <button onClick={() => setMenuAberto(true)} className="md:hidden text-gray-400 hover:text-white p-1">
               ☰
@@ -411,12 +440,18 @@ export default function Home() {
           )}
         </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto w-full max-w-4xl mx-auto space-y-6">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto w-full max-w-4xl mx-auto space-y-6" onClick={() => setChatMenuAberto(null)}>
           {!sessaoAtiva || sessaoAtiva.mensagens.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-400 text-center px-4 animate-fade-in">
-              <span className="text-7xl md:text-8xl mb-6 drop-shadow-lg">👨‍🦲</span>
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-200">Em que posso ajudar hoje?</h2>
-              <p className="text-sm md:text-base mt-4 text-gray-500 max-w-md">Cola o teu código, descreve o projeto ou clica na <span className="text-red-400 font-bold">Arena de Bugs</span> para ganhares XP.</p>
+              <span className={`text-7xl md:text-8xl mb-6 drop-shadow-lg transition-transform ${!isOnline ? "grayscale opacity-50" : ""}`}>👨‍🦲</span>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-200">
+                {isOnline ? "Em que posso ajudar hoje?" : "Estou sem sinal, chefe!"}
+              </h2>
+              <p className="text-sm md:text-base mt-4 text-gray-500 max-w-md">
+                {isOnline 
+                  ? <span>Cola o teu código, descreve o projeto ou clica na <span className="text-red-400 font-bold">Arena de Bugs</span> para ganhares XP.</span>
+                  : "Liga a Wi-Fi ou os dados móveis para continuarmos a programar."}
+              </p>
             </div>
           ) : (
             sessaoAtiva.mensagens.map((msg, index) => {
@@ -433,20 +468,45 @@ export default function Home() {
                           components={{
                             code({ className, children, ...props }: any) {
                               const match = /language-(\w+)/.exec(className || "");
+                              const rawCode = String(children).replace(/\n$/, "");
+                              
                               if (match) {
                                 return (
                                   <div className="rounded-xl overflow-hidden border border-gray-700 my-5 bg-[#1e1e1e] shadow-xl">
                                     <div className="flex items-center justify-between px-4 py-2.5 bg-gray-950 border-b border-gray-800">
                                       <span className="text-xs font-mono font-medium text-gray-400 lowercase">{match[1]}</span>
-                                      <button
-                                        onClick={async () => {
-                                          navigator.clipboard.writeText(String(children));
-                                          try { await Haptics.impact({ style: ImpactStyle.Light }); } catch (e) {}
-                                        }}
-                                        className="text-xs font-bold text-gray-500 hover:text-white transition-colors bg-gray-800 hover:bg-gray-700 px-3 py-1 rounded-md"
-                                      >
-                                        COPIAR
-                                      </button>
+                                      
+                                      <div className="flex gap-2">
+                                        {/* NOVO BOTÃO: PARTILHAR */}
+                                        <button
+                                          onClick={async () => {
+                                            try { 
+                                              await Haptics.impact({ style: ImpactStyle.Light }); 
+                                              await Share.share({
+                                                title: 'Código gerado pelo CarecaAI',
+                                                text: rawCode,
+                                                dialogTitle: 'Partilhar código via'
+                                              });
+                                            } catch (e) {
+                                              console.log("A partilha nativa não é suportada neste ambiente.");
+                                            }
+                                          }}
+                                          className="text-xs font-bold text-blue-400 hover:text-white transition-colors bg-gray-800 hover:bg-gray-700 px-3 py-1 rounded-md"
+                                        >
+                                          PARTILHAR
+                                        </button>
+
+                                        {/* BOTÃO COPIAR */}
+                                        <button
+                                          onClick={async () => {
+                                            navigator.clipboard.writeText(rawCode);
+                                            try { await Haptics.impact({ style: ImpactStyle.Light }); } catch (e) {}
+                                          }}
+                                          className="text-xs font-bold text-gray-400 hover:text-white transition-colors bg-gray-800 hover:bg-gray-700 px-3 py-1 rounded-md"
+                                        >
+                                          COPIAR
+                                        </button>
+                                      </div>
                                     </div>
                                     <SyntaxHighlighter
                                       {...props}
@@ -455,7 +515,7 @@ export default function Home() {
                                       PreTag="div"
                                       customStyle={{ margin: 0, padding: "1.25rem", background: "transparent", fontSize: "0.875rem" }}
                                     >
-                                      {String(children).replace(/\n$/, "")}
+                                      {rawCode}
                                     </SyntaxHighlighter>
                                   </div>
                                 );
@@ -480,19 +540,21 @@ export default function Home() {
           <div ref={fimDoChatRef} />
         </main>
 
-        <footer className="p-3 md:p-5 bg-gray-900 border-t border-gray-800 pb-safe">
+        <footer className="p-3 md:p-5 bg-gray-900 border-t border-gray-800 pb-safe" onClick={() => setChatMenuAberto(null)}>
           <form onSubmit={enviarMensagem} className="max-w-4xl mx-auto relative flex items-center">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              disabled={carregando}
-              placeholder="Digita a tua dúvida ou responde ao desafio..."
-              className="w-full bg-gray-950 border border-gray-700 text-white text-[15px] md:text-base rounded-2xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 block p-3.5 md:p-4 pr-14 outline-none disabled:opacity-50 shadow-inner transition-all"
+              disabled={carregando || !isOnline}
+              placeholder={isOnline ? "Digita a tua dúvida ou responde ao desafio..." : "Calma chefe, o Careca está sem sinal. Encontra uma Wi-Fi!"}
+              className={`w-full bg-gray-950 border text-[15px] md:text-base rounded-2xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 block p-3.5 md:p-4 pr-14 outline-none shadow-inner transition-all ${
+                !isOnline ? "border-red-900/50 text-red-400 placeholder-red-600/50 cursor-not-allowed" : "border-gray-700 text-white disabled:opacity-50"
+              }`}
             />
             <button 
               type="submit" 
-              disabled={carregando || !input.trim()}
+              disabled={carregando || !input.trim() || !isOnline}
               className="absolute right-2 p-2 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-400 hover:to-orange-500 disabled:from-gray-700 disabled:to-gray-800 disabled:text-gray-500 transition-all flex items-center justify-center h-10 w-10 md:h-11 md:w-11 shadow-md hover:shadow-orange-900/50"
             >
               <span className="mb-[2px] ml-[2px]">🚀</span>
