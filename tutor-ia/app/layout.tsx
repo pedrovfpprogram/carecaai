@@ -1,4 +1,5 @@
 import "./globals.css";
+import Script from "next/script";
 
 export const metadata = {
   title: "CarecaAI",
@@ -16,17 +17,23 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#ea580c" />
         {/* Ligar o motor do aplicativo (Service Worker) */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js');
-                });
-              }
-            `,
-          }}
-        />
+        {/* Ligar o motor do aplicativo (Service Worker) à maneira do Next.js */}
+        <Script id="service-worker-registro" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(
+                  function(registration) {
+                    console.log('Service Worker a rodar liso no escopo: ', registration.scope);
+                  },
+                  function(err) {
+                    console.log('O Service Worker engasgou: ', err);
+                  }
+                );
+              });
+            }
+          `}
+        </Script>
       </head>
       <body>{children}</body>
     </html>
