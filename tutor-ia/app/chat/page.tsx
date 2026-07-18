@@ -197,16 +197,31 @@ export default function ChatApp() {
   };
 
   const carregarDadosDaNuvem = async (userId: string) => {
-    const { data: profile } = await supabase.from('profiles').select('xp').eq('id', userId).single();
-    if (profile) setXp(profile.xp);
+    // 1. Tentar carregar o perfil de XP
+    let { data: profile } = await supabase.from('profiles').select('xp').eq('id', userId).single();
 
-    const { data: chatsData } = await supabase.from('chats').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+    // Se a conta for nova e não tiver perfil, cria um zerado!
+    if (!profile) {
+      await supabase.from('profiles').insert([{ id: userId, xp: 0 }]);
+    } else {
+      setXp(profile.xp);
+    }
+
+    // 2. Carregar Chats da Nuvem
+    const { data: chatsData, error } = await supabase.from('chats').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("❌ Erro na Nuvem! Já rodaste o código SQL no Supabase?", error.message);
+      return;
+    }
+
     if (chatsData && chatsData.length > 0) {
+      // ✅ A NUVEM TEM DADOS! Puxar para o ecrã
       const sessoesNuvem = chatsData.map(c => ({
         id: c.id, title: c.title, mensagens: c.mensagens, isArena: c.is_arena, xpReivindicado: c.xp_reivindicado, isPinned: c.is_pinned
       }));
+      
       setSessions(prev => {
-        // Se temos um desafio via link localmente não gravado, priorizamos mantê-lo
         const desafioAtual = prev.find(s => s.title.includes("⚔️ Duelo:"));
         if (desafioAtual && !sessoesNuvem.find(s => s.id === desafioAtual.id)) {
           salvarSessaoNaNuvem(desafioAtual, userId);
@@ -214,8 +229,23 @@ export default function ChatApp() {
         }
         return sessoesNuvem;
       });
-      // Só troca o ID se não houver um chat ativo!
       setActiveSessionId(prevId => prevId || sessoesNuvem[0].id);
+
+    } else {
+      // ⬆️ A NUVEM ESTÁ VAZIA! Vamos procurar no PC e subir tudo para o Supabase (Up-Sync)
+      const savedSessions = localStorage.getItem("carecaai_sessions");
+      if (savedSessions) {
+        try {
+          const parsed = JSON.parse(savedSessions);
+          if (parsed && parsed.length > 0) {
+            console.log("A detetar chats órfãos no PC. A iniciar a sincronização com a Nuvem... ☁️");
+            // Sincronizar silenciosamente
+            parsed.forEach((sessao: ChatSession) => salvarSessaoNaNuvem(sessao, userId));
+            setSessions(parsed);
+            setActiveSessionId(parsed[0].id);
+          }
+        } catch (e) {}
+      }
     }
   };
 
