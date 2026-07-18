@@ -1,35 +1,36 @@
-# 👨‍🦲 CarecaAI (v0.3 - Production Ready)
+# 👨‍🦲 CarecaAI — Ecossistema de Aprendizagem Interativo (v0.4.0)
 
-O **CarecaAI** é um tutor de programação inteligente e implacável, focado em ajudar desenvolvedores a resolver bugs, entender lógica complexa e aprender novas tecnologias com uma abordagem gamificada e direta.
+O **CarecaAI** é um tutor de programação e Tech Lead implacável projetado para levar desenvolvedores do nível Estagiário a Sénior. Através de uma arquitetura híbrida e modular construída em Next.js 16, a plataforma combina inteligência artificial com gamificação, execução de código local e sincronização em nuvem.
 
 ---
 
-## 🚀 O que há de novo na Versão 0.3?
+## 🚀 Novidades da Versão 0.4.0
 
-O CarecaAI deu um salto de uma página web para uma experiência nativa de telemóvel:
+### 1. Arquitetura Local-First & Cloud Sync ☁️
+* **Zero Latência:** O histórico de conversas e níveis de XP passam a ser carregados instantaneamente a partir do armazenamento nativo do dispositivo (`localStorage`), eliminando perdas de dados ao atualizar a página.
+* **Sincronização Supabase:** Autenticação e espelhamento em tempo real com o banco de dados na nuvem assim que o status passa para `☁️ ON`.
 
-* **🎖️ Sistema de Patentes e XP:** Ganhe experiência ao derrotar a IA na Arena de Bugs. Suba de *Estagiário Perdido* até *Sénior Sem Cabelo* com uma barra de progresso visual.
-* **📶 Modo Offline Inteligente:** Ficar sem internet não quebra a app. O sistema deteta a falha de rede instantaneamente, avisa o utilizador e bloqueia envios fantasma.
-* **📲 Partilha Nativa e Haptics:** Integração profunda com o telemóvel via Capacitor. Sinta a vibração física ao enviar mensagens ou ganhar XP, e exporte blocos de código diretamente para o WhatsApp ou Discord com um clique.
-* **📌 Gestão de Chats Avançada:** Novo menu flutuante (estilo Gemini) que permite Renomear, Apagar e **Fixar (Pin)** as suas conversas mais importantes no topo da lista.
+### 2. CarecaCode Playground & Mágica Local 💻
+* **Editor Integrado:** Acoplado com o **Monaco Editor** (o mesmo motor do VS Code), permitindo alteração de código em tempo real diretamente dentro da plataforma.
+* **Execução Sandbox:** Compilação e execução nativa para linguagens Web (**JavaScript, HTML e CSS**) rodando localmente no navegador, garantindo imunidade a bloqueios de APIs externas.
 
-## ⚔️ A Arena de Bugs
+### 3. O Dicionário do Careca (2º Cérebro) 🧠
+* **Cofre de Snippets:** Adicionado o botão `💾 GUARDAR` em todos os blocos de código gerados pela IA. 
+* **Caderno Persistente:** Permite armazenar apontamentos técnicos importantes acessíveis a qualquer momento através do painel lateral para consulta, cópia ou re-execução direta no Playground.
 
-Um modo interativo onde a IA assume o papel de um Tech Lead carrasco, gerando código propositadamente quebrado (em qualquer linguagem que escolher). Descubra o erro, conserte o código e reivindique os seus pontos de XP!
+### 4. Sistema de Combos & Ataques da API ⚔️
+* **RPG de Bugs:** A Arena de Bugs agora gera relatórios de missões estruturados contendo Nível de Ameaça, Tecnologia e Objetivos claros.
+* **Multiplicador de Chamas (🔥):** Acertar desafios seguidos ativa o multiplicador de Combo. Chegar a um Combo múltiplo de 3 garante um bónus brutal de **+150 XP**.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Front-end:** [Next.js 16](https://nextjs.org/), [Tailwind CSS v4](https://tailwindcss.com/)
-- **IA/Back-end:** [Hugging Face Inference API](https://huggingface.co/) (Qwen2.5-Coder-32B)
-- **Mobile (Capacitor):** Haptics (Vibração), Share (Partilha Nativa).
-- **Persistência:** `localStorage` (Histórico de chats e pontuação salvos localmente).
+* **Framework:** [Next.js 16 (Turbopack)](https://nextjs.org/)
+* **Estilização:** [Tailwind CSS](https://tailwindcss.com/)
+* **Banco de Dados & Auth:** [Supabase](https://supabase.com/)
+* **Motor do Editor:** [@monaco-editor/react](https://www.npmjs.com/package/@monaco-editor/react)
+* **Renderização de Texto:** [ReactMarkdown](https://github.com/remarkjs/react-markdown) & [Prism Syntax Highlighter](https://github.com/prismjs/prism)
+* **Pontes Nativas (Mobile):** [Capacitor Core & Plugins (Haptics, Share)](https://capacitorjs.com/)
 
 ---
-
-## ⚙️ Como usar
-
-1. **Site web**
-   
-   [CarecaAI](carecaai.vercel.app)
